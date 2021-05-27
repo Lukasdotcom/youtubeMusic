@@ -47,18 +47,17 @@ def update(configInfo):  # updates all playlists
             print(
                 f"Playlist {number} of {configLen}; Video {howFarVideo} of {videoLen} called {y.title}; ", end= '')
             name = configInfo[x] + "/" + y.title + ".mp4"
-            try:
+            if name in songList:
                 songList.remove(name)
                 print("Already downloaded skipped")
-            except:
+            else:
                 print("Downloading")
                 while True:
                     try:
-                        y.streams.filter(only_audio=True).first().download(output_path=configInfo[x])
+                        y.streams.filter(file_extension='mp4').filter(only_audio=True).first().download(output_path=configInfo[x], filename=name)
                         break
                     except:
-                        print("ERROR while downloading retrying")
-                    
+                        print("ERROR while downloading retrying")       
         songLen = len(songList)
         howFarVideo = 0
         for y in songList:
@@ -68,6 +67,8 @@ def update(configInfo):  # updates all playlists
         number += 1
     return configInfo
 
+def clearCache(configInfo): # Clears the cache
+    print("Deleting cache")
 
 def show(configInfo):  # print all playlists
     print("List of all playlists")
@@ -97,7 +98,10 @@ def edit(configInfo):  # edit one of them
             choice -= 1
             if choice < 1:
                 break
-        playlist = Playlist(x).title
+        try:
+            playlist = Playlist(x).title
+        except:
+            playlist = "invalid link"
         print(f"Link: {x}")
         print(f"Name: {playlist}")
         print(f"Storage: {configInfo[x]}")
@@ -185,6 +189,7 @@ options = {
     "e": edit,
     "d": delete,
     "a": add,
+    "c": clearCache,
     "q": leave
 }
 while True:
@@ -197,6 +202,7 @@ p - will print all playlist links and where they are stored
 e - edit a playlist entry
 d - delete a playlist entry(Will not delete the actual music files)
 a - can be used to add another playlist
+c - clear cache used when downloading is not working well
 q - used to quit
 """)
     try:  # Runs the correct function for which one
