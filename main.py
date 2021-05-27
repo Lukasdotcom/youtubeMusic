@@ -46,7 +46,7 @@ def update(configInfo):  # updates all playlists
             howFarVideo += 1
             print(
                 f"Playlist {number} of {configLen}; Video {howFarVideo} of {videoLen} called {y.title}; ", end= '')
-            name = y.title + ".mp4"
+            name = configInfo[x] + "/" + y.title + ".mp4"
             try:
                 songList.remove(name)
                 print("Already downloaded skipped")
