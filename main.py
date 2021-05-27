@@ -46,13 +46,19 @@ def update(configInfo):  # updates all playlists
             howFarVideo += 1
             print(
                 f"Playlist {number} of {configLen}; Video {howFarVideo} of {videoLen} called {y.title}; ", end= '')
-            name = y.streams.filter(only_audio=True).first().download(
-                output_path=configInfo[x])
+            name = y.title + ".mp4"
             try:
                 songList.remove(name)
                 print("Already downloaded skipped")
             except:
                 print("Downloading")
+                while True:
+                    try:
+                        y.streams.filter(only_audio=True).first().download(output_path=configInfo[x])
+                        break
+                    except:
+                        print("ERROR while downloading retrying")
+                    
         songLen = len(songList)
         howFarVideo = 0
         for y in songList:
