@@ -21,7 +21,39 @@ def readFile(location):  # Loads the location of a certain file and returns that
                 f"Json file at {location} has corrupted or invalid entries")
 
 
+print("Searching for configuration files")
+try:  # Will check for the arguement for the location of the config
+    location = sys.argv[1]
+    if location[-1] == "/":
+        location = location[:-1]
+    configLocation = location + "/.config.json"
+    cacheLocation = location + "/.cache.json"
+except:
+    print("argument missing for working directory using directory of program")
+    location = str(os.getcwdb())[2:-1]
+    configLocation = location + "/.config.json"
+    cacheLocation = location + "/.cache.json"
+if not os.path.isdir(location):  # Will check if the folder for the config exists
+    os.makedirs(location)
+    print("Folder did not exist created new folder at" + location)
+# Will find the config file and create a new one if it does not exist
+if not os.path.isfile(configLocation):
+    print("New folder detected creating new config")
+    writeFile(configLocation, {})
+    configInfo = {}
+else:
+    configInfo = readFile(configLocation)
+    print("Found Configuration files")
+if not os.path.isfile(cacheLocation):
+    print("New folder detected creating new cache")
+    writeFile(cacheLocation, {})
+else:
+    print("Found cache files")
+
+
 def update(configInfo):  # updates all playlists
+    global cacheLocation
+    cacheInfo = readFile(cacheLocation)
     number = 1
     configLen = len(configInfo)
     for x in configInfo:
@@ -43,32 +75,49 @@ def update(configInfo):  # updates all playlists
         videoLen = len(playlist.videos)
         songList = glob.glob(configInfo[x] + "/*.mp4")
         for y in playlist.videos:
+            try:
+                videoTitle = cacheInfo[y.watch_url]
+            except:
+                videoTitle = y.title
+                cacheInfo[y.watch_url] = videoTitle
             howFarVideo += 1
             print(
-                f"Playlist {number} of {configLen}; Video {howFarVideo} of {videoLen} called {y.title}; ", end= '')
-            name = configInfo[x] + "/" + y.title + ".mp4"
+                f"Playlist {number} of {configLen}; Video {howFarVideo} of {videoLen} called {videoTitle}; ", end='')
+            name = configInfo[x] + "/" + videoTitle + ".mp4"
             if name in songList:
+                print(songList, name)
                 songList.remove(name)
                 print("Already downloaded skipped")
             else:
                 print("Downloading")
                 while True:
                     try:
-                        y.streams.filter(file_extension='mp4').filter(only_audio=True).first().download(output_path=configInfo[x], filename=name)
+                        y.streams.filter(file_extension='mp4').filter(
+                            only_audio=True).first().download(output_path=configInfo[x], filename=videoTitle)
                         break
                     except:
-                        print("ERROR while downloading retrying")       
+                        print("ERROR while downloading retrying")
         songLen = len(songList)
         howFarVideo = 0
         for y in songList:
             howFarVideo += 1
             os.remove(y)
-            print(f"Playlist {number} of {configLen}; Deleting video {howFarVideo} of {songLen} located at {y}")
+            print(
+                f"Playlist {number} of {configLen}; Deleting video {howFarVideo} of {songLen} located at {y}")
         number += 1
+    writeFile(cacheLocation, cacheInfo)
     return configInfo
 
-def clearCache(configInfo): # Clears the cache
+
+def clearCache(configInfo):  # Clears the cache
+    global cacheLocation
     print("Deleting cache")
+    try:
+        os.remove(cacheLocation)
+    except:
+        print("Cache not found")
+    return configInfo
+
 
 def show(configInfo):  # print all playlists
     print("List of all playlists")
@@ -161,27 +210,6 @@ def leave(configInfo):
     exit()
 
 
-print("Searching for configuration files")
-try:  # Will check for the arguement for the location of the config
-    location = sys.argv[1]
-    if location[-1] == "/":
-        location = location[:-1]
-    configLocation = location + "/.config.json"
-except:
-    print("argument missing for working directory using directory of program")
-    location = str(os.getcwdb())[2:-1]
-    configLocation = location + "/.config.json"
-if not os.path.isdir(location):  # Will check if the folder for the config exists
-    os.makedirs(location)
-    print("Folder did not exist created new folder at" + location)
-# Will find the config file and create a new one if it does not exist
-if not os.path.isfile(location + "/.config.json"):
-    print("New folder detected creating new config")
-    writeFile(configLocation, {})
-    configInfo = {}
-else:
-    configInfo = readFile(configLocation)
-    print("Found Configuration files")
 # list of all functions
 options = {
     "u": update,
