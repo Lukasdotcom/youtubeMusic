@@ -4,6 +4,7 @@ import sys
 import os
 import json
 import glob
+from mutagen.mp4 import MP4
 print("youtubeMusic downloader is starting! This program can be used to download your music playlist from youtube for free in a fast and easy way!")
 
 
@@ -76,16 +77,36 @@ def update(configInfo):  # updates all playlists
         songList = glob.glob(configInfo[x] + "/*.mp4")
         for y in playlist.videos:
             try:
-                videoTitle = cacheInfo[y.watch_url]
+                metadata = cacheInfo[y.watch_url]
+                skip = True
+            except:
+                try:
+                    metadata = y.metadata.metadata[0]
+                except:
+                    metadata = {}
+                skip = False
+            try:
+                videoTitle = metadata["Song"]
             except:
                 videoTitle = y.title
-                cacheInfo[y.watch_url] = videoTitle
+                print(f"Song title not found resorting to video title of {videoTitle}")
+            try:
+                videoAuthor = metadata["Artist"]
+            except:
+                videoAuthor = y.author
+                print(f"Song artist not found using video channel name {videoAuthor}")
+            try:
+                videoAlbum = metadata["Album"]
+            except:
+                videoAlbum = "unknown"
+                print(f"Song album not found")
+            if not skip:
+                cacheInfo[y.watch_url] = metadata
             howFarVideo += 1
             print(
                 f"Playlist {number} of {configLen}; Video {howFarVideo} of {videoLen} called {videoTitle}; ", end='')
             name = configInfo[x] + "/" + videoTitle + ".mp4"
             if name in songList:
-                print(songList, name)
                 songList.remove(name)
                 print("Already downloaded skipped")
             else:
@@ -97,6 +118,12 @@ def update(configInfo):  # updates all playlists
                         break
                     except:
                         print("ERROR while downloading retrying")
+                file = MP4(name)                         
+                file['©nam'] = videoTitle
+                file['©ART'] = videoAuthor
+                file['©alb'] = videoAlbum
+                file.pprint()
+                file.save() 
         songLen = len(songList)
         howFarVideo = 0
         for y in songList:
