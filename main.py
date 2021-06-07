@@ -58,7 +58,7 @@ def update(configInfo):  # updates all playlists
     number = 1
     configLen = len(configInfo)
     for x in configInfo:
-        try:
+        try: # will check if the playlist is valid
             playlist = Playlist(x)
             print(
                 f"Starting update of playlist {number} of {configLen} called {playlist.title} at location {configInfo[x]}")
@@ -72,59 +72,66 @@ def update(configInfo):  # updates all playlists
             os.makedirs(configInfo[x])
             print(
                 f"Folder for {playlist.title} not exist created new folder at {configInfo[x]}")
-        howFarVideo = 0
-        videoLen = len(playlist.videos)
-        songList = glob.glob(configInfo[x] + "/*.mp4")
+        howFarVideo = 0 # Used to see how many videos the program is through
+        videoLen = len(playlist.videos) # how many videos are in the playlist
+        songList = glob.glob(configInfo[x] + "/*.mp4") # a list of all songs already downloaded to make sure there are not extra songs that need to be deleted
+        # goes through every video in the playlist
         for y in playlist.videos:
-            try:
+            try: # looks if the metadata is cached
                 metadata = cacheInfo[y.watch_url]
                 skip = True
             except:
-                try:
+                try: # looks if the metadata characteristic exists for a video
                     metadata = y.metadata.metadata[0]
                 except:
                     metadata = {}
-                skip = False
-            try:
+                skip = False # used to check if the cache needs to be updated
+            try: # checks the title otherwise uses the title of the video
                 videoTitle = metadata["Song"]
             except:
                 while True:
                     try:
                         videoTitle = y.title
+                        skip = False
                         break
                     except:
                         continue
                 print(f"Song title not found resorting to video title of {videoTitle}")
-            bannedCharacters = ["."]
+            bannedCharacters = [".", "'", '"'] # invalid characters for file names
             videoTitle2 = ""
-            for z in videoTitle:
+            for z in videoTitle: # removes banned characters from a video
                 if z not in bannedCharacters:
                     videoTitle2 += z
             videoTitle = videoTitle2
-            try:
+            try: # Checks for the artist otherwise uses the name of the channel
                 videoAuthor = metadata["Artist"]
             except:
                 videoAuthor = y.author
-                if videoAuthor[-7:] == "- Topic":
+                if videoAuthor[-7:] == "- Topic": # Channels for some reason have - Topic at the end so that is removed
                     videoAuthor = videoAuthor[:-8]
+                skip = False
                 print(f"Song artist not found using video channel name {videoAuthor}")
-            try:
+            try: # Checks if an album is in the metadata
                 videoAlbum = metadata["Album"]
             except:
+                skip = False
                 videoAlbum = "unknown"
                 print(f"Song album not found")
-            howFarVideo += 1
+            howFarVideo += 1 
+            # prints a status update
             print(
                 f"Playlist {number} of {configLen}; Video {howFarVideo} of {videoLen} called {videoTitle}; ")
             name = configInfo[x] + "/" + videoTitle + ".mp4"
-            if name in songList:
-                songList.remove(name)
+            if name in songList: # checks if the song was already downloaded
+                songList.remove(name) # removes the song from the deletion queue
                 print("Already downloaded skipped")
             else:
                 print("Downloading")
                 try:
+                    # code used to download the song and store it in the right folder with the correct file name
                     y.streams.filter(file_extension='mp4').filter(
                         only_audio=True).first().download(output_path=configInfo[x], filename=videoTitle)
+                    # makes the file have the correct metadata
                     file = MP4(name)                         
                     file['©nam'] = videoTitle
                     file['©ART'] = videoAuthor
@@ -132,14 +139,16 @@ def update(configInfo):  # updates all playlists
                     file.pprint()
                     file.save() 
                 except:
+                    # used for a failure in a download to delete the file also and report it to the user.
                     print("ERROR while downloading skipping")
                     try:
                         os.remove(name)
                     except:
                         1
-            if not skip:
+            if not skip: # if the cache for the video needs to be updated it is updated here
                 cacheInfo[y.watch_url] = {"Song": videoTitle, "Artist": videoAuthor, "Album": videoAlbum}
                 writeFile(cacheLocation, cacheInfo)
+        # goes through every video still left in the deletion queue
         songLen = len(songList)
         howFarVideo = 0
         for y in songList:
@@ -148,6 +157,7 @@ def update(configInfo):  # updates all playlists
             print(
                 f"Playlist {number} of {configLen}; Deleting video {howFarVideo} of {songLen} located at {y}")
         number += 1
+    # updates the cache
     writeFile(cacheLocation, cacheInfo)
     return configInfo
 
