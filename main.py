@@ -88,42 +88,58 @@ def update(configInfo):  # updates all playlists
             try:
                 videoTitle = metadata["Song"]
             except:
-                videoTitle = y.title
+                while True:
+                    try:
+                        videoTitle = y.title
+                        break
+                    except:
+                        continue
                 print(f"Song title not found resorting to video title of {videoTitle}")
+            bannedCharacters = ["."]
+            videoTitle2 = ""
+            for z in videoTitle:
+                if z not in bannedCharacters:
+                    videoTitle2 += z
+            videoTitle = videoTitle2
             try:
                 videoAuthor = metadata["Artist"]
             except:
                 videoAuthor = y.author
+                if videoAuthor[-7:] == "- Topic":
+                    videoAuthor = videoAuthor[:-8]
                 print(f"Song artist not found using video channel name {videoAuthor}")
             try:
                 videoAlbum = metadata["Album"]
             except:
                 videoAlbum = "unknown"
                 print(f"Song album not found")
-            if not skip:
-                cacheInfo[y.watch_url] = metadata
             howFarVideo += 1
             print(
-                f"Playlist {number} of {configLen}; Video {howFarVideo} of {videoLen} called {videoTitle}; ", end='')
+                f"Playlist {number} of {configLen}; Video {howFarVideo} of {videoLen} called {videoTitle}; ")
             name = configInfo[x] + "/" + videoTitle + ".mp4"
             if name in songList:
                 songList.remove(name)
                 print("Already downloaded skipped")
             else:
                 print("Downloading")
-                while True:
+                try:
+                    y.streams.filter(file_extension='mp4').filter(
+                        only_audio=True).first().download(output_path=configInfo[x], filename=videoTitle)
+                    file = MP4(name)                         
+                    file['©nam'] = videoTitle
+                    file['©ART'] = videoAuthor
+                    file['©alb'] = videoAlbum
+                    file.pprint()
+                    file.save() 
+                except:
+                    print("ERROR while downloading skipping")
                     try:
-                        y.streams.filter(file_extension='mp4').filter(
-                            only_audio=True).first().download(output_path=configInfo[x], filename=videoTitle)
-                        break
+                        os.remove(name)
                     except:
-                        print("ERROR while downloading retrying")
-                file = MP4(name)                         
-                file['©nam'] = videoTitle
-                file['©ART'] = videoAuthor
-                file['©alb'] = videoAlbum
-                file.pprint()
-                file.save() 
+                        1
+            if not skip:
+                cacheInfo[y.watch_url] = {"Song": videoTitle, "Artist": videoAuthor, "Album": videoAlbum}
+                writeFile(cacheLocation, cacheInfo)
         songLen = len(songList)
         howFarVideo = 0
         for y in songList:
