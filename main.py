@@ -74,7 +74,7 @@ def update(configInfo):  # updates all playlists
                 f"Folder for {playlist.title} not exist created new folder at {configInfo[x]}")
         howFarVideo = 0 # Used to see how many videos the program is through
         videoLen = len(playlist.videos) # how many videos are in the playlist
-        songList = glob.glob(configInfo[x] + "/*.mp4") # a list of all songs already downloaded to make sure there are not extra songs that need to be deleted
+        songList = glob.glob(configInfo[x] + "/*.mp3") # a list of all songs already downloaded to make sure there are not extra songs that need to be deleted
         # goes through every video in the playlist
         for y in playlist.videos:
             try: # looks if the metadata is cached
@@ -122,8 +122,8 @@ def update(configInfo):  # updates all playlists
             print(
                 f"Playlist {number} of {configLen}; Video {howFarVideo} of {videoLen} called {videoTitle}; ")
             name = configInfo[x] + "/" + videoTitle + ".mp4"
-            if name in songList: # checks if the song was already downloaded
-                songList.remove(name) # removes the song from the deletion queue
+            if (configInfo[x] + "/" + videoTitle + ".mp3") in songList: # checks if the song was already downloaded
+                songList.remove(configInfo[x] + "/" + videoTitle + ".mp3") # removes the song from the deletion queue
                 print("Already downloaded skipped")
             else:
                 print("Downloading")
@@ -131,13 +131,7 @@ def update(configInfo):  # updates all playlists
                     # code used to download the song and store it in the right folder with the correct file name
                     y.streams.filter(file_extension='mp4').filter(
                         only_audio=True).first().download(output_path=configInfo[x], filename=videoTitle)
-                    # makes the file have the correct metadata
-                    file = MP4(name)                         
-                    file['©nam'] = videoTitle
-                    file['©ART'] = videoAuthor
-                    file['©alb'] = videoAlbum
-                    file.pprint()
-                    file.save() 
+                    skip = False
                 except:
                     # used for a failure in a download to delete the file also and report it to the user.
                     print("ERROR while downloading skipping")
@@ -146,6 +140,17 @@ def update(configInfo):  # updates all playlists
                     except:
                         1
             if not skip: # if the cache for the video needs to be updated it is updated here
+                try:
+                    # makes the file have the correct metadata
+                    file = MP4(name)                         
+                    file['©nam'] = videoTitle
+                    file['©ART'] = videoAuthor
+                    file['©alb'] = videoAlbum
+                    file.pprint()
+                    file.save()
+                    os.rename(name ,configInfo[x] + "/" + videoTitle + ".mp3")
+                except:
+                    print("ERROR metadata could not be saved")
                 cacheInfo[y.watch_url] = {"Song": videoTitle, "Artist": videoAuthor, "Album": videoAlbum}
                 writeFile(cacheLocation, cacheInfo)
         # goes through every video still left in the deletion queue
