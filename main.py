@@ -37,6 +37,14 @@ except:
 if not os.path.isdir(location):  # Will check if the folder for the config exists
     os.makedirs(location)
     print("Folder did not exist created new folder at" + location)
+try:
+    writeFile(configLocation + "temp", {})
+    os.remove(configLocation + "temp")
+except:
+    print(f"Directory, {location} could not be accessed using {sys.path[0]}")
+    location = sys.path[0]
+    configLocation = location + "/.config.json"
+    cacheLocation = location + "/.cache.json"
 # Will find the config file and create a new one if it does not exist
 if not os.path.isfile(configLocation):
     print("New folder detected creating new config")
