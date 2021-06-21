@@ -97,13 +97,12 @@ def update(configInfo):  # updates all playlists
             try: # checks the title otherwise uses the title of the video
                 videoTitle = metadata["Song"]
             except:
-                while True:
-                    try:
-                        videoTitle = y.title
-                        skip = False
-                        break
-                    except:
-                        continue
+                try:
+                    videoTitle = y.title
+                    skip = False
+                except:
+                    print("cant find video title skipping")
+                    continue
                 print(f"Song title not found resorting to video title of {videoTitle}")
             bannedCharacters = [".", "'", '"'] # invalid characters for file names
             videoTitle2 = ""
