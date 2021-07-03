@@ -104,7 +104,7 @@ def update(configInfo):  # updates all playlists
                     print("cant find video title skipping")
                     continue
                 print(f"Song title not found resorting to video title of {videoTitle}")
-            bannedCharacters = [".", "'", '"'] # invalid characters for file names
+            bannedCharacters = [".", "'", '"', ",", "/"] # invalid characters for file names
             videoTitle2 = ""
             for z in videoTitle: # removes banned characters from a video
                 if z not in bannedCharacters:
@@ -118,6 +118,11 @@ def update(configInfo):  # updates all playlists
                     videoAuthor = videoAuthor[:-8]
                 skip = False
                 print(f"Song artist not found using video channel name {videoAuthor}")
+            videoAuthor2 = ""
+            for z in videoAuthor: # removes banned characters from a video
+                if z not in bannedCharacters:
+                    videoAuthor2 += z
+            videoAuthor = videoAuthor2
             try: # Checks if an album is in the metadata
                 videoAlbum = metadata["Album"]
             except:
