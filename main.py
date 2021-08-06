@@ -6,7 +6,7 @@ import json
 import glob
 from mutagen.mp4 import MP4
 print("youtubeMusic downloader is starting! This program can be used to download your music playlist from youtube for free in a fast and easy way!")
-
+print("If this program is not working for you please put a issue on github. Many issues exist because of the library that this was built on so they may not be fixable temporarily.")
 
 def writeFile(location, info):  # Will write info in json format to a file
     with open(location, 'w') as f:
@@ -142,7 +142,7 @@ def update(configInfo):  # updates all playlists
                 try:
                     # code used to download the song and store it in the right folder with the correct file name
                     y.streams.filter(file_extension='mp4').filter(
-                        only_audio=True).first().download(output_path=configInfo[x], filename=videoTitle)
+                        only_audio=True).first().download(output_path=configInfo[x], filename=name)
                     skip = False
                 except:
                     # used for a failure in a download to delete the file also and report it to the user.
