@@ -23,7 +23,7 @@ def readFile(location):  # Loads the location of a certain file and returns that
 
 
 print("Searching for configuration files")
-try:  # Will check for the arguement for the location of the config
+try:  # Will check for the arguments for the location of the config
     location = sys.argv[1]
     if location[-1] == "/":
         location = location[:-1]
@@ -290,6 +290,16 @@ options = {
     "c": clearCache,
     "q": leave
 }
+for x in sys.argv[2:]: # runs every choice put after the location automatically.
+    try:  # Runs the correct function for which one
+        test = options[x]
+        skip = False
+    except:
+        print("Invalid Input")
+        skip = True
+    if not skip:
+        configInfo = options[x](configInfo)
+    writeFile(configLocation, configInfo)
 while True:
     # Will give the choices to the user
     choice = input("""

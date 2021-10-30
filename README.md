@@ -7,3 +7,4 @@ The source code for mutagen is at [click here](https://github.com/quodlibet/muta
 Then download this repository (You only need main.py) Then run main.py and follow directions in terminal
 Songs can not have the same title otherwise this program will redownload them every time
 This will only download the audio.
+To automate tasks you can add an argument as an action so if you want to update the playlists just add u to the end of the command.
