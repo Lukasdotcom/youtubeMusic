@@ -4,6 +4,10 @@ import sys
 import os
 import json
 import glob
+import vlc
+import random
+import time
+from threading import Thread
 from mutagen.mp4 import MP4
 print("youtubeMusic downloader is starting! This program can be used to download your music playlist from youtube for free in a fast and easy way!")
 print("If this program is not working for you please put a issue on github. Many issues exist because of the library that this was built on so they may not be fixable temporarily.")
@@ -279,6 +283,40 @@ def leave(configInfo):
     print("Left program succesfully")
     exit()
 
+def playSong(song):
+    song.play()
+
+def play(configInfo): # Used to play a playlist
+    choice = input("Enter the howmanyth entry you want to play: ")
+    try:
+        choice = int(choice)
+    except:
+        choice = 0
+    if choice > 0 and choice <= len(configInfo):
+        for x in configInfo:
+            choice -= 1
+            if choice < 1:
+                break
+        try:
+            playlist = Playlist(x).title
+        except:
+            playlist = "invalid link"
+        print(f"Link: {x}")
+        print(f"Name: {playlist}")
+        print(f"Storage: {configInfo[x]}")
+        songs = glob.glob(configInfo[x] + "/*.mp3")
+        try:
+            while True:
+                name = random.choice(songs)
+                song = vlc.MediaPlayer(name)
+                song.play()
+                print(f"Playing: {name}")
+                time.sleep(1)
+                while song.is_playing():
+                    time.sleep(1)
+        except KeyboardInterrupt:
+            song.stop()
+    return configInfo
 
 # list of all functions
 options = {
@@ -288,13 +326,14 @@ options = {
     "d": delete,
     "a": add,
     "c": clearCache,
-    "q": leave
+    "q": leave,
+    "r": play
 }
 for x in sys.argv[2:]: # runs every choice put after the location automatically.
     try:  # Runs the correct function for which one
         test = options[x]
         skip = False
-    except:
+    except KeyError:
         print("Invalid Input")
         skip = True
     if not skip:
@@ -311,12 +350,13 @@ e - edit a playlist entry
 d - delete a playlist entry(Will not delete the actual music files)
 a - can be used to add another playlist
 c - clear cache used when downloading is not working well
+r - used to play a playlist and press ctrl-c to stop playing
 q - used to quit
 """)
     try:  # Runs the correct function for which one
         test = options[choice]
         skip = False
-    except:
+    except KeyError:
         print("Invalid Input")
         skip = True
     if not skip:
