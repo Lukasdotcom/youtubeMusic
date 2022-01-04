@@ -29,15 +29,15 @@ def readFile(location):  # Loads the location of a certain file and returns that
 print("Searching for configuration files")
 try:  # Will check for the arguments for the location of the config
     location = sys.argv[1]
-    if location[-1] == "/":
-        location = location[:-1]
-    configLocation = location + "/.config.json"
-    cacheLocation = location + "/.cache.json"
+    configLocation = location + ".config.json"
+    cacheLocation = location + ".cache.json"
 except:
+    # Will find where the programs working directory is.
     print("argument missing for working directory using directory of program")
     location = str(os.getcwdb())[2:-1]
-    configLocation = location + "/.config.json"
-    cacheLocation = location + "/.cache.json"
+    location = f"{location}{location[0]}"
+    configLocation = location + ".config.json"
+    cacheLocation = location + ".cache.json"
 if not os.path.isdir(location):  # Will check if the folder for the config exists
     os.makedirs(location)
     print("Folder did not exist created new folder at" + location)
@@ -47,8 +47,8 @@ try:
 except:
     print(f"Directory, {location} could not be accessed using {sys.path[0]}")
     location = sys.path[0]
-    configLocation = location + "/.config.json"
-    cacheLocation = location + "/.cache.json"
+    configLocation = location + ".config.json"
+    cacheLocation = location + ".cache.json"
 # Will find the config file and create a new one if it does not exist
 if not os.path.isfile(configLocation):
     print("New folder detected creating new config")
@@ -86,7 +86,7 @@ def update(configInfo):  # updates all playlists
                 f"Folder for {playlist.title} not exist created new folder at {configInfo[x]}")
         howFarVideo = 0 # Used to see how many videos the program is through
         videoLen = len(playlist.videos) # how many videos are in the playlist
-        songList = glob.glob(configInfo[x] + "/*.mp3") # a list of all songs already downloaded to make sure there are not extra songs that need to be deleted
+        songList = glob.glob(configInfo[x] + "*.mp3") # a list of all songs already downloaded to make sure there are not extra songs that need to be deleted
         # goes through every video in the playlist
         for y in playlist.videos:
             try: # looks if the metadata is cached
@@ -108,7 +108,7 @@ def update(configInfo):  # updates all playlists
                     print("cant find video title skipping")
                     continue
                 print(f"Song title not found resorting to video title of {videoTitle}")
-            bannedCharacters = [".", "'", '"', ",", "/"] # invalid characters for file names
+            bannedCharacters = [".", "'", '"', ",", "/", "\\"] # invalid characters for file names
             videoTitle2 = ""
             for z in videoTitle: # removes banned characters from a video
                 if z not in bannedCharacters:
@@ -137,9 +137,9 @@ def update(configInfo):  # updates all playlists
             # prints a status update
             print(
                 f"Playlist {number} of {configLen}; Video {howFarVideo} of {videoLen} called {videoTitle}; ")
-            name = configInfo[x] + "/" + videoTitle + ".mp4"
-            if (configInfo[x] + "/" + videoTitle + ".mp3") in songList: # checks if the song was already downloaded
-                songList.remove(configInfo[x] + "/" + videoTitle + ".mp3") # removes the song from the deletion queue
+            name = configInfo[x] + videoTitle + ".mp4"
+            if (configInfo[x] + videoTitle + ".mp3") in songList: # checks if the song was already downloaded
+                songList.remove(configInfo[x] + videoTitle + ".mp3") # removes the song from the deletion queue
                 print("Already downloaded skipped")
             else:
                 print("Downloading")
@@ -164,7 +164,7 @@ def update(configInfo):  # updates all playlists
                     file['©alb'] = videoAlbum
                     file.pprint()
                     file.save()
-                    os.rename(name ,configInfo[x] + "/" + videoTitle + ".mp3")
+                    os.rename(name ,configInfo[x] + videoTitle + ".mp3")
                 except:
                     print("ERROR metadata could not be saved")
                 cacheInfo[y.watch_url] = {"Song": videoTitle, "Artist": videoAuthor, "Album": videoAlbum}
@@ -234,7 +234,7 @@ def edit(configInfo):  # edit one of them
             if url == "":
                 url = x
             location = input(
-                "Enter the storage location of the playlist; complete path: ")
+                "Enter the storage location of the playlist; complete path with the / or \\ at the end: ")
             if location == "":
                 location = configInfo[x]
             configInfo.pop(x)
@@ -272,7 +272,7 @@ def delete(configInfo):
 def add(configInfo):
     url = input("Enter the url of the playlist: ")
     location = input(
-        "Enter the storage location of the playlist; complete path: ")
+        "Enter the storage location of the playlist; complete path with the / or \\ at the end: ")
     configInfo[url] = location
     return configInfo
 
@@ -304,7 +304,7 @@ def play(configInfo): # Used to play a playlist
         print(f"Link: {x}")
         print(f"Name: {playlist}")
         print(f"Storage: {configInfo[x]}")
-        songs = glob.glob(configInfo[x] + "/*.mp3")
+        songs = glob.glob(configInfo[x] + "*.mp3")
         try:
             while True:
                 name = random.choice(songs)
