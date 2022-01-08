@@ -7,7 +7,6 @@ import glob
 import vlc
 import random
 import time
-from threading import Thread
 from mutagen.mp4 import MP4
 print("youtubeMusic downloader is starting! This program can be used to download your music playlist from youtube for free in a fast and easy way!")
 print("If this program is not working for you please put a issue on github. Many issues exist because of the library that this was built on so they may not be fixable temporarily.")
@@ -31,30 +30,28 @@ try:  # Will check for the arguments for the location of the config
     location = sys.argv[1]
     configLocation = location + ".config.json"
     cacheLocation = location + ".cache.json"
-except:
-    # Will find where the programs working directory is.
-    print("argument missing for directory using working directory of program")
-    location = str(os.getcwdb())[2:-1]
-    # Will check if this is on windows
-    if location[0] == "C":
-        ending = "\\"
-    else:
-        ending = location[0]
-    location = f"{location}{ending}"
+except IndexError:
+    # Will find where the programs directory is.
+    print("argument missing for directory using directory of program")
+    location = sys.path[0].replace("__main__.py", "")
+    for x in range(len(location)):
+        if location[x] == "/":
+            character = "/"
+            break
+        elif location[x] == "\\":
+            character = "\\"
+            break
+    if location[-1] != character:
+        location = f"{location}{character}"
     configLocation = location + ".config.json"
     cacheLocation = location + ".cache.json"
 if not os.path.isdir(location):  # Will check if the folder for the config exists
     os.makedirs(location)
-    print("Folder did not exist created new folder at" + location)
-try:
-    writeFile(configLocation + "temp", {})
-    os.remove(configLocation + "temp")
-except:
-    print(f"Directory, {location} could not be accessed using {sys.path[0]}")
-    location = sys.path[0]
-    configLocation = location + ".config.json"
-    cacheLocation = location + ".cache.json"
+    print("Folder did not exist created new folder at " + location)
+writeFile(configLocation + "temp", {})
+os.remove(configLocation + "temp")
 # Will find the config file and create a new one if it does not exist
+print(f"Config stored in {location}")
 if not os.path.isfile(configLocation):
     print("New folder detected creating new config")
     writeFile(configLocation, {})
@@ -142,36 +139,34 @@ def update(configInfo):  # updates all playlists
             # prints a status update
             print(
                 f"Playlist {number} of {configLen}; Video {howFarVideo} of {videoLen} called {videoTitle}; ")
-            name = configInfo[x] + videoTitle + ".mp4"
+            name = configInfo[x] + videoTitle + ".mp3"
             if (configInfo[x] + videoTitle + ".mp3") in songList: # checks if the song was already downloaded
                 songList.remove(configInfo[x] + videoTitle + ".mp3") # removes the song from the deletion queue
                 print("Already downloaded skipped")
             else:
                 print("Downloading")
                 try:
+                    print(name)
                     # code used to download the song and store it in the right folder with the correct file name
                     y.streams.filter(file_extension='mp4').filter(
                         only_audio=True).first().download(output_path=configInfo[x], filename=name)
                     skip = False
-                except:
+                except Exception:
                     # used for a failure in a download to delete the file also and report it to the user.
                     print("ERROR while downloading skipping")
                     try:
                         os.remove(name)
-                    except:
+                    except Exception:
                         1
             if not skip: # if the cache for the video needs to be updated it is updated here
-                try:
-                    # makes the file have the correct metadata
-                    file = MP4(name)                         
-                    file['©nam'] = videoTitle
-                    file['©ART'] = videoAuthor
-                    file['©alb'] = videoAlbum
-                    file.pprint()
-                    file.save()
-                    os.rename(name ,configInfo[x] + videoTitle + ".mp3")
-                except:
-                    print("ERROR metadata could not be saved")
+                # makes the file have the correct metadata
+                file = MP4(name)                         
+                file['title'] = videoTitle
+                file['author'] = videoAuthor
+                file['album'] = videoAlbum
+                file.save()
+                os.rename(name ,configInfo[x] + videoTitle + ".mp3")
+                
                 cacheInfo[y.watch_url] = {"Song": videoTitle, "Artist": videoAuthor, "Album": videoAlbum}
                 writeFile(cacheLocation, cacheInfo)
         # goes through every video still left in the deletion queue
@@ -193,7 +188,7 @@ def clearCache(configInfo):  # Clears the cache
     print("Deleting cache")
     try:
         os.remove(cacheLocation)
-    except:
+    except Exception:
         print("Cache not found")
     return configInfo
 
@@ -205,7 +200,7 @@ def show(configInfo):  # print all playlists
         howMany += 1
         try:
             playlist = Playlist(x).title
-        except:
+        except Exception:
             playlist = "invalid link"
         print(f"{howMany}. Link: {x}")
         print(f"{howMany}. Name: {playlist}")
@@ -219,7 +214,7 @@ def edit(configInfo):  # edit one of them
     choice = input("Enter the howmanyth entry you want to change: ")
     try:
         choice = int(choice)
-    except:
+    except ValueError:
         choice = 0
     if choice > 0 and choice <= len(configInfo):
         for x in configInfo:
@@ -228,7 +223,7 @@ def edit(configInfo):  # edit one of them
                 break
         try:
             playlist = Playlist(x).title
-        except:
+        except Exception:
             playlist = "invalid link"
         print(f"Link: {x}")
         print(f"Name: {playlist}")
@@ -253,7 +248,7 @@ def delete(configInfo):
     choice = input("Enter the howmanyth entry you want to delete: ")
     try:
         choice = int(choice)
-    except:
+    except ValueError:
         choice = 0
     if choice > 0 and choice <= len(configInfo):
         for x in configInfo:
@@ -262,7 +257,7 @@ def delete(configInfo):
                 break
         try:
             playlist = Playlist(x).title
-        except:
+        except Exception:
             playlist = "invalid link"
         print(f"Link: {x}")
         print(f"Name: {playlist}")
@@ -295,7 +290,7 @@ def play(configInfo): # Used to play a playlist
     choice = input("Enter the howmanyth entry you want to play: ")
     try:
         choice = int(choice)
-    except:
+    except ValueError:
         choice = 0
     if choice > 0 and choice <= len(configInfo):
         for x in configInfo:
@@ -304,7 +299,7 @@ def play(configInfo): # Used to play a playlist
                 break
         try:
             playlist = Playlist(x).title
-        except:
+        except Exception:
             playlist = "invalid link"
         print(f"Link: {x}")
         print(f"Name: {playlist}")
