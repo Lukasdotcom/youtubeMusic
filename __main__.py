@@ -146,7 +146,6 @@ def update(configInfo):  # updates all playlists
             else:
                 print("Downloading")
                 try:
-                    print(name)
                     # code used to download the song and store it in the right folder with the correct file name
                     y.streams.filter(file_extension='mp4').filter(
                         only_audio=True).first().download(output_path=configInfo[x], filename=name)
