@@ -33,9 +33,14 @@ try:  # Will check for the arguments for the location of the config
     cacheLocation = location + ".cache.json"
 except:
     # Will find where the programs working directory is.
-    print("argument missing for working directory using directory of program")
+    print("argument missing for directory using working directory of program")
     location = str(os.getcwdb())[2:-1]
-    location = f"{location}{location[0]}"
+    # Will check if this is on windows
+    if location[0] == "C":
+        ending = "\\"
+    else:
+        ending = location[0]
+    location = f"{location}{ending}"
     configLocation = location + ".config.json"
     cacheLocation = location + ".cache.json"
 if not os.path.isdir(location):  # Will check if the folder for the config exists
@@ -108,7 +113,7 @@ def update(configInfo):  # updates all playlists
                     print("cant find video title skipping")
                     continue
                 print(f"Song title not found resorting to video title of {videoTitle}")
-            bannedCharacters = [".", "'", '"', ",", "/", "\\"] # invalid characters for file names
+            bannedCharacters = [".", "'", '"', ",", "/", "\\", "?"] # invalid characters for file names
             videoTitle2 = ""
             for z in videoTitle: # removes banned characters from a video
                 if z not in bannedCharacters:
