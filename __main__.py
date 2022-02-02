@@ -157,6 +157,7 @@ def update(configInfo):  # updates all playlists
                         os.remove(name)
                     except Exception:
                         1
+                    skip = True
             if not skip: # if the cache for the video needs to be updated it is updated here
                 # makes the file have the correct metadata
                 file = MP4(name)                         
